@@ -1,6 +1,6 @@
 # astronomer
 
-Get info on the users who've starred a given GitHub repository.
+Fetch information about the users who've starred a given GitHub repository.
 
 ## Installation
 
