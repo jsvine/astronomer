@@ -59,6 +59,8 @@ def make_requester(token):
     def requester(url):
         log_url(url)
         response = requests.get(url, auth=(token, "x-oauth-basic"))
+        if response.status_code != 200:
+            raise Exception("HTTP Status: {}".format(response.status_code))
         log_response(response)
         return response
     return requester
@@ -70,6 +72,17 @@ def get_writer(fmt):
         "csv": write_csv
     }[fmt]
 
+def check_rate_limit(repo, requester, args):
+    rate_limit_response = requester(API_BASE + "/rate_limit")
+    rate_limit = rate_limit_response.json()["resources"]["core"]
+    reqs_remaining = rate_limit["remaining"]
+    reqs_needed = (repo.stargazers_count / 20) \
+        + (bool(repo.stargazers_count % 20) * 1) \
+        + ((not args.minimal) * repo.stargazers_count)
+    if reqs_needed > reqs_remaining:
+        logger.fatal("Getting all these stargazers would require {0} requests, but you have only {1} remaining. Exiting.".format(reqs_needed, reqs_remaining))
+        exit()
+
 def get_repo_type(args):
     repo_type = "gist" if args.gist else "repo"
     if repo_type == "gist":
@@ -80,16 +93,24 @@ def get_repo_type(args):
     
 def main():
     args = get_args()
+
+    # Set up logging
     logger.setLevel(logging.WARNING if args.quiet else logging.INFO) 
+
+    # Set up authentication
     token = args.token or getpass.getpass("Personal API Access Token: ")
     requester = make_requester(token)
 
     # Initialize repo, and check the rate limit
     repo = Repo(args.repo, get_repo_type(args))
     repo.fetch_info(requester)
+    check_rate_limit(repo, requester, args)
+
+    # Get the stargazers
     repo.fetch_stargazers(requester)
-    if not args.minimal:
-        repo.fetch_stargazer_details(requester)
+    if not args.minimal: repo.fetch_stargazer_details(requester)
+
+    # Write the results
     writer = get_writer(args.format)
     writer(repo.stargazers, args.outfile)
 
