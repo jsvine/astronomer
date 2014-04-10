@@ -8,7 +8,7 @@ Fetch information about the users who've starred a given GitHub repository.
 
 ## Usage
 
-Before using `astronomer`, you'll need to [generate a Personal API Token](https://github.com/blog/1509-personal-api-tokens). Don't worry, it's easy. Then, it's just a matter of, for example:
+Before using `astronomer`, you'll need to [generate a Personal API Token](https://github.com/blog/1509-personal-api-tokens). Don't worry, it's easy. After that, using `astronomer` is as simple as naming the repo and supplying the token:
 
 ```sh
 astronomer jsvine/envplus --token [ENTER TOKEN HERE]
