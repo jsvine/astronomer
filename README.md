@@ -28,6 +28,10 @@ Specifies the format in which `astronomer` outputs the data. Default: `tsv`.
 
 Specifies a file to which `astronomer` outputs the data. Default: *stdout*.
 
+### --minimal
+
+Fetch only the ids and usernames of users who've starred the repo, rather than the [full details](https://developer.github.com/v3/users/#get-a-single-user). Drastically reduces the number of rate-limited requests needed.
+
 ### --quiet
 
 Silence logging.
