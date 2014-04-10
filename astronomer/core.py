@@ -13,7 +13,7 @@ class Stargazer(object):
         return self
 
     def to_json(self):
-        nixed = set(("url", "type", "site_admin", "gravatar_id"))
+        nixed = set(("url", "type", "site_admin"))
         urls = set(filter(lambda x: "_url" in x, self.info.keys()))
         keys = set(self.info.keys()) - (nixed | urls)
         encode = lambda x: x.encode("utf-8") if type(x) == unicode else x 
