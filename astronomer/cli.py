@@ -3,24 +3,21 @@ import argparse
 import getpass
 import logging
 import requests
-from core import Repo, Stargazer
+from core import Repo, Stargazer, API_BASE
 from writers import write_json, write_tsv, write_csv
 
 logging.basicConfig(format="%(name)s | %(message)s")
 logger = logging.getLogger("astronomer")
 
-def repo_from_slash(repo_str):
-    split = repo_str.split("/")
-    if len(split) != 2:
-        raise Exception("Repo argument should be in the format :owner/:repo.")
-    return Repo(*split)
-
 def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("repo",
-        type=repo_from_slash,
         help=":owner/:repo")
+
+    parser.add_argument("--gist", "-g",
+        action="store_true",
+        help="Repo is a gist. Not yet supported by GitHub API.")
 
     parser.add_argument("--format", "-f",
         default="tsv",
@@ -73,12 +70,22 @@ def get_writer(fmt):
         "csv": write_csv
     }[fmt]
 
+def get_repo_type(args):
+    repo_type = "gist" if args.gist else "repo"
+    if repo_type == "gist":
+        logger.fatal("The GitHub API cannot yet retreive stargazers for gists. Exiting.")
+        exit()
+    else:
+        return repo_type
+    
 def main():
     args = get_args()
     logger.setLevel(logging.WARNING if args.quiet else logging.INFO) 
     token = args.token or getpass.getpass("Personal API Access Token: ")
     requester = make_requester(token)
-    repo = args.repo
+
+    # Initialize repo, and check the rate limit
+    repo = Repo(args.repo, get_repo_type(args))
     repo.fetch_info(requester)
     repo.fetch_stargazers(requester)
     if not args.minimal:

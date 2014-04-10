@@ -29,19 +29,21 @@ def gather_responses(requester, url, so_far=[]):
     return gather_responses(requester, next_link, so_far + response.json())
 
 class Repo(object):
-    def __init__(self, owner, name):
-        self.api_base = API_BASE
-        self.owner = owner
-        self.name = name
+    def __init__(self, repo_id, repo_type="repo"):
+        self.repo_id = repo_id
+        self.repo_type = repo_type
 
     def fetch_info(self, requester):
-        url = "{api_base}/repos/{owner}/{name}".format(**self.__dict__)
+        url = "{0}/{1}s/{2}".format(API_BASE,
+            self.repo_type, self.repo_id)
         response = requester(url)
         self.info = response.json()
+        self.stargazers_count = self.info["stargazers_count"]
         return self
     
     def fetch_stargazers(self, requester):
-        url = "{api_base}/repos/{owner}/{name}/stargazers".format(**self.__dict__)
+        url = "{0}/{1}s/{2}/stargazers".format(API_BASE,
+            self.repo_type, self.repo_id)
         self.stargazers = map(Stargazer, gather_responses(requester, url))
         return self 
 
